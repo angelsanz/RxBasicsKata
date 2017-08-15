@@ -1,13 +1,18 @@
 package org.sergiiz.rxkata;
 
+
+import io.reactivex.Maybe;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.functions.BiFunction;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.FutureTask;
 
-import io.reactivex.Observable;
-import io.reactivex.Single;
-
 class CountriesServiceSolved implements CountriesService {
+
+    private BiFunction<Long,Long,Long> sum = (a, b) -> a + b;
 
     @Override
     public Single<String> countryNameInCapitals(Country country) {
@@ -76,6 +81,24 @@ class CountriesServiceSolved implements CountriesService {
 
     @Override
     public Observable<Tuple<String, Long>> getAveragePopulationByCurrency(List<Country> countries) {
-        return null; // put your solution here
+        return Observable.fromIterable(countries)
+                .groupBy(Country::getCurrency)
+                .flatMap(groupOfCountriesByCurrency -> {
+                    Observable<Country> countryByCurrency = groupOfCountriesByCurrency.cache();
+
+                    Single<Long> numberOfCountries = countryByCurrency
+                            .count();
+                    Maybe<Long> sumOfPopulations = countryByCurrency
+                            .map(Country::getPopulation)
+                            .reduce(sum);
+
+                    return Observable.zip(sumOfPopulations.toObservable(), numberOfCountries.toObservable(),
+                    (sumOfPopulations_, numberOfCountries_) -> {
+                        long averagePopulation = sumOfPopulations_ / numberOfCountries_;
+                        String currency = groupOfCountriesByCurrency.getKey();
+
+                        return Tuple.of(currency, averagePopulation);
+                    });
+                });
     }
 }
