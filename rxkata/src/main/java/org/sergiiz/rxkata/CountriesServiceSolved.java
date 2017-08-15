@@ -1,5 +1,7 @@
 package org.sergiiz.rxkata;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.FutureTask;
@@ -81,6 +83,16 @@ class CountriesServiceSolved implements CountriesService {
 
     @Override
     public Observable<Tuple<String, Observable<String>>> getNamesByCurencySortedDescendingByPopulationAndWithoutDuplicates(Observable<Country>... countriesFromSeveralSources) {
-        return null; // put your solution here
+        return Observable.merge(Arrays.asList(countriesFromSeveralSources))
+                .distinct()
+                .groupBy(Country::getCurrency)
+                .map(countriesByCurrency -> {
+                    Observable<String> sortedNames = countriesByCurrency
+                            .sorted(Comparator.comparingLong(Country::getPopulation).reversed())
+                            .map(Country::getName);
+                    String currency = countriesByCurrency.getKey();
+
+                    return Tuple.of(currency, sortedNames);
+                });
     }
 }
