@@ -2,6 +2,7 @@ package org.sergiiz.rxkata;
 
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 final class CountriesTestProvider {
     private CountriesTestProvider() {
@@ -87,5 +88,32 @@ final class CountriesTestProvider {
         }
 
         return result;
+    }
+
+    public static Map<String, List<String>> namesByCurrencySortedDescendingByPopulation() {
+        Map<String, List<String>> result = new HashMap<>();
+        for (String currency : Currencies.all()) {
+            List<Country> countries = new ArrayList<>();
+            for (Country country : countries()) {
+                if (!country.getCurrency().equals(currency)) continue;
+                countries.add(country);
+            }
+            Collections.sort(countries, Comparator.comparingLong(Country::getPopulation).reversed());
+            List<String> sortedNames = countries.stream().map(Country::getName).collect(Collectors.toList());
+            result.put(currency, sortedNames);
+        }
+
+        return result;
+    }
+
+    public static List<List<Country>> countriesFromDifferentSources() {
+        List<Country> countriesFromASource = getElementsByIndices(countries(), 0, 2, 2, 4, 6, 6, 6);
+        List<Country> countriesFromAnotherSource = getElementsByIndices(countries(), 1, 1, 3, 5, 5, 7);
+        
+        return Arrays.asList(countriesFromASource, countriesFromAnotherSource);
+    }
+
+    private static <T> List<T> getElementsByIndices(List<T> list, Integer... indices) {
+        return Arrays.asList(indices).stream().map(list::get).collect(Collectors.toList());
     }
 }

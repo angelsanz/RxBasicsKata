@@ -13,6 +13,14 @@ public final class Tuple<F, S> {
         return new Tuple<>(first, second);
     }
 
+    public F getFirst() {
+        return first;
+    }
+
+    public S getSecond() {
+        return second;
+    }
+
     @Override
     public String toString() {
         return "Tuple{" +

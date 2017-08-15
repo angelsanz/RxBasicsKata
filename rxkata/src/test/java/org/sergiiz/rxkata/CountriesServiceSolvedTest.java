@@ -5,17 +5,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.observers.TestObserver;
+
+import static org.junit.Assert.assertTrue;
 
 public class CountriesServiceSolvedTest {
 
@@ -230,6 +227,31 @@ public class CountriesServiceSolvedTest {
                 .getAveragePopulationByCurrency(allCountries)
                 .test();
         testObserver.assertValueSet(CountriesTestProvider.averagePopulationByCurrency());
+        testObserver.assertNoErrors();
+    }
+
+    @Test
+    public void rx_getNamesByCurencySortedDescendingByPopulationAndWithoutDuplicates() {
+        TestObserver<Tuple<String, Observable<String>>> testObserver = countriesService
+                .getNamesByCurencySortedDescendingByPopulationAndWithoutDuplicates(
+                        Observable.fromIterable(CountriesTestProvider.countriesFromDifferentSources().get(0)),
+                        Observable.fromIterable(CountriesTestProvider.countriesFromDifferentSources().get(1))
+                )
+                .test();
+
+        Map<String, List<String>> namesByCurrency = CountriesTestProvider.namesByCurrencySortedDescendingByPopulation();
+        List emissions = testObserver.getEvents().get(0);
+        for (Object emittedTuple : emissions) {
+            Tuple<String, Observable<String>> tuple = (Tuple<String, Observable<String>>) emittedTuple;
+
+            String currency = tuple.getFirst();
+            Set<String> currencies = namesByCurrency.keySet();
+            assertTrue(currencies.contains(currency));
+
+            TestObserver<String> testObserverOfNames = tuple.getSecond().test();
+            testObserverOfNames.assertValueSequence(namesByCurrency.get(currency));
+            testObserverOfNames.assertNoErrors();
+        }
         testObserver.assertNoErrors();
     }
 }

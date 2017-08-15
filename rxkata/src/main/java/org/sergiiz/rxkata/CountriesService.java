@@ -42,4 +42,6 @@ interface CountriesService {
                                              Observable<Country> countryObservable2);
 
     Observable<Tuple<String, Long>> getAveragePopulationByCurrency(List<Country> countries);
+
+    Observable<Tuple<String, Observable<String>>> getNamesByCurencySortedDescendingByPopulationAndWithoutDuplicates(Observable<Country>... countriesFromSeveralSources);
 }
